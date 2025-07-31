@@ -2,20 +2,26 @@ body {
   margin: 0;
   overflow: hidden;
   background: #ffffff;
-  font-family: sans-serif;
+}
+
+canvas {
+  display: block;
 }
 
 #overlay {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
-  width: 100%;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   gap: 12px;
-  z-index: 10;
+  z-index: 999;
+  pointer-events: none;
 }
 
 button {
+  pointer-events: all;
   background: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
@@ -23,8 +29,4 @@ button {
   font-size: 16px;
   border-radius: 12px;
   cursor: pointer;
-}
-
-button:hover {
-  background: rgba(0, 0, 0, 0.9);
 }
