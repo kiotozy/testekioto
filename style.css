@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #ffffff;
+  font-family: sans-serif;
+}
+
+#overlay {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  z-index: 10;
+}
+
+button {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
