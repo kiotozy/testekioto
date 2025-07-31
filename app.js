@@ -8,39 +8,38 @@ let currentAction = null;
 
 initScene();
 loadModel();
-setupVoiceCommands();
-
-document.getElementById('ar-button').addEventListener('click', () => {
-  document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
-  renderer.xr.enabled = true;
-  renderer.setAnimationLoop(render);
-});
+setupVoiceRecognition();
 
 function initScene() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
+
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+  camera.position.set(0, 1.6, 2);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.xr.enabled = false;
   document.body.appendChild(renderer.domElement);
-
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  light.position.set(0.5, 1, 0.25);
-  scene.add(light);
 
   clock = new THREE.Clock();
 
+  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+  light.position.set(0, 1, 0);
+  scene.add(light);
+
   const controls = new OrbitControls(camera, renderer.domElement);
-  camera.position.set(0, 1.6, 2);
+  controls.target.set(0, 1, 0);
   controls.update();
+
+  animate();
 }
 
 function loadModel() {
   const loader = new GLTFLoader();
   loader.load('kioto.glb', (gltf) => {
     model = gltf.scene;
+    model.position.set(0, 0, 0);
+    model.scale.set(1, 1, 1);
     scene.add(model);
 
     mixer = new THREE.AnimationMixer(model);
@@ -49,24 +48,29 @@ function loadModel() {
       currentAction = mixer.clipAction(gltf.animations[0]);
       currentAction.play();
     }
+  }, undefined, (error) => {
+    console.error('Erro ao carregar o modelo:', error);
   });
 }
 
-function playAnimation(play = true) {
-  if (!currentAction) return;
-  if (play) {
-    currentAction.play();
-  } else {
-    currentAction.stop();
-  }
-}
-
-function render(timestamp, frame) {
-  if (mixer) mixer.update(clock.getDelta());
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  if (mixer) mixer.update(delta);
   renderer.render(scene, camera);
 }
 
-function setupVoiceCommands() {
+document.getElementById('ar-button').addEventListener('click', () => {
+  document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+  renderer.xr.enabled = true;
+  renderer.setAnimationLoop(() => {
+    const delta = clock.getDelta();
+    if (mixer) mixer.update(delta);
+    renderer.render(scene, camera);
+  });
+});
+
+function setupVoiceRecognition() {
   const micButton = document.getElementById('mic-button');
   micButton.addEventListener('click', () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -75,17 +79,20 @@ function setupVoiceCommands() {
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-      handleCommand(transcript);
+      const text = event.results[0][0].transcript.toLowerCase().trim();
+      console.log('Comando:', text);
+      handleVoiceCommand(text);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Erro no reconhecimento de voz:', event.error);
     };
 
     recognition.start();
   });
 }
 
-function handleCommand(text) {
-  console.log('Comando reconhecido:', text);
-
+function handleVoiceCommand(text) {
   const audioMap = {
     'olá': 'ola.mp3',
     'bom dia': 'bom_dia.mp3',
@@ -98,14 +105,12 @@ function handleCommand(text) {
   };
 
   if (text in audioMap) {
-    const audio = new Audio(audioMap[text]);
-    audio.play();
+    new Audio(audioMap[text]).play();
   } else if (text.includes('dançar')) {
-    playAnimation(true);
+    if (currentAction) currentAction.play();
   } else if (text.includes('parar')) {
-    playAnimation(false);
+    if (currentAction) currentAction.stop();
   } else {
-    const audio = new Audio('nao_entendi.mp3');
-    audio.play();
+    new Audio('nao_entendi.mp3').play();
   }
 }
