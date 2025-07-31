@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kioto AR</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF‑8"/>
 </head>
-<body>
-  <div id="overlay">
-    <button id="ar-button">Ativar AR</button>
-    <button id="mic-button">🎤</button>
-  </div>
-  <script type="module" src="app.js"></script>
+<body style="margin:0; overflow:hidden;">
+  <canvas id="canvas"></canvas>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js';
+
+    const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
+    camera.position.set(0, 1.6, 2);
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
+
+    const loader = new GLTFLoader();
+    loader.load('kioto.glb', gltf => {
+      scene.add(gltf.scene);
+      renderer.setAnimationLoop(() => renderer.render(scene, camera));
+    }, undefined, err => console.error('Erro glTF:', err));
+  </script>
 </body>
 </html>
