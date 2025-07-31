@@ -21,7 +21,7 @@
       display: flex;
       justify-content: center;
       gap: 10px;
-      z-index: 1000;
+      z-index: 1000; /* Garante que os botões fiquem acima da cena AR */
     }
     button {
       padding: 12px 20px;
@@ -32,23 +32,23 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    /* A-Frame scene will take full screen, but with a lower z-index */
     a-scene {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: 1; /* Coloca a cena abaixo dos botões */
     }
   </style>
 </head>
 <body>
   <div id="buttons">
     <button id="micButton">🎤 Falar</button>
-    <button id="arButton">Ativar AR</button>
   </div>
 
-  <a-scene id="scene" embedded xr-mode-ui="enabled: false"
+  <a-scene id="scene" embedded xr-mode-ui="enabled: true"
     renderer="antialias: true" gesture-detector>
 
     <a-assets>
@@ -69,39 +69,28 @@
     <a-sky color="#ECECEC"></a-sky>
     <a-light type="ambient" color="#FFF"></a-light>
     
-    <a-entity camera position="0 1.6 0" look-controls="enabled: false"></a-entity>
+    <a-entity camera position="0 1.6 0" look-controls="enabled: true"></a-entity>
   </a-scene>
 
   <script>
     const modelEntity = document.getElementById('glb');
-    const arButton = document.getElementById('arButton');
     const scene = document.querySelector('a-scene');
 
-    scene.setAttribute('vr-mode-ui', 'enabled: false');
-    scene.setAttribute('ar-mode-ui', 'enabled: false');
-
-    window.onload = function() {
-        modelEntity.setAttribute('animation-mixer', '');
-    };
-
-    // Componente para rotacionar o modelo com o toque
+    // Componente para detectar gestos e rotacionar o modelo
     AFRAME.registerComponent('gesture-detector', {
       init: function () {
-        this.el.addEventListener('onefingermove', (event) => {
-          const rotation = this.el.getAttribute('rotation');
-          this.el.setAttribute('rotation', {
-            x: rotation.x,
-            y: rotation.y + event.detail.positionChange.x * 2,
-            z: rotation.z
+        this.el.sceneEl.addEventListener('loaded', () => {
+          const scene = this.el.sceneEl;
+          scene.addEventListener('onefingermove', (event) => {
+            const rotation = this.el.getAttribute('rotation');
+            this.el.setAttribute('rotation', {
+              x: rotation.x,
+              y: rotation.y + event.detail.positionChange.x * 2,
+              z: rotation.z
+            });
           });
         });
       }
-    });
-
-    arButton.addEventListener('click', () => {
-      scene.enterAR();
-      scene.querySelector('a-plane').setAttribute('visible', 'false');
-      scene.querySelector('a-sky').setAttribute('visible', 'false');
     });
 
     const comandos = {
